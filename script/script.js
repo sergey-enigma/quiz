@@ -4,15 +4,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModal = document.getElementById('closeModal');
     const questionTitle = document.getElementById('question');
     const formAnswers = document.getElementById('formAnswers');
+    const menuButton = document.getElementById('burger');
+    const modalWrap = document.querySelector('.modal');
 
-    btnOpenModal.addEventListener('click', () => {
+    function handleWidth() {
+        let clientWidth = document.documentElement.clientWidth;
+        menuButton.style.display = clientWidth > 768 ? 'none' : 'flex';
+    }
+
+    function showDialog() {
+        menuButton.classList.add('active');
         modalBlock.classList.add('d-block');
         playTest();
-    });
+    }
 
-    closeModal.addEventListener('click', () => {
+    function hideDialog() {
+        menuButton.classList.remove('active');
         modalBlock.classList.remove('d-block');
+    }
+
+    window.addEventListener('resize', handleWidth);
+    menuButton.addEventListener('click', showDialog);
+    btnOpenModal.addEventListener('click', showDialog);
+    closeModal.addEventListener('click', hideDialog);
+    modalWrap.addEventListener('click', function(event) {
+        if (event.target.id === 'modalBlock') {
+            hideDialog();
+        }
     });
+    handleWidth();
 
     const playTest = () => {
         const renderQuestions = () => {
