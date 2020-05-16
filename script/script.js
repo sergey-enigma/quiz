@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+    let questions = [];
+    let idx;
+
     let elems = {
         button: {
             openModal: '#btnOpenModal',
@@ -6,9 +9,13 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         modal: {
             id: '#modalBlock',
-            close: '#closeModal',
             question: '#question',
-            answers: '#formAnswers'
+            answers: '#formAnswers',
+            button: {
+                close: '#closeModal',
+                previous: '#prev',
+                next: '#next'
+            }
         }
     };
     elems = applySelector(elems);
@@ -24,11 +31,20 @@ document.addEventListener('DOMContentLoaded', function() {
             show: () => {
                 elems.button.menu.classList.add('active');
                 elems.modal.id.classList.add('d-block');
-                playTest();
+                idx = -1;
+                render(0);
             },
             hide: () => {
                 elems.button.menu.classList.remove('active');
                 elems.modal.id.classList.remove('d-block');
+            },
+            previous: () => {
+                let id = Math.max(idx - 1, 0);
+                render(id);
+            },
+            next: () => {
+                let id = Math.min(idx + 1, questions.length - 1);
+                render(id);
             },
             outside: (event) => {
                 if (event.target === elems.modal.id) {
@@ -42,40 +58,42 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('resize', handle.window.width);
         elems.button.menu.addEventListener('click', handle.dialog.show);
         elems.button.openModal.addEventListener('click', handle.dialog.show);
-        elems.modal.close.addEventListener('click', handle.dialog.hide);
+        elems.modal.button.close.addEventListener('click', handle.dialog.hide);
+        elems.modal.button.previous.addEventListener('click', handle.dialog.previous);
+        elems.modal.button.next.addEventListener('click', handle.dialog.next);
         elems.modal.id.addEventListener('click', handle.dialog.outside);
 
         handle.window.width();
+
+        getData('questions.json').then((result) => questions = result.questions);
     }
 
-    const playTest = () => {
-        const renderQuestions = () => {
-            elems.modal.question.textContent = 'Какого цвета бургер вы хотите?';
-
-            const type = 'radio';
-            const data = [
-                { id: 'answerItem1', text: 'Стандарт', img: './image/burger.png', class: 'flex-column' },
-                { id: 'answerItem2', text: 'Черный', img: './image/burgerBlack.png', class: 'justify-content-center' }
-            ];
-
-            elems.modal.answers.innerHTML = '';
-            data.forEach(row => {
-                const elem = document.createElement('div');
-                elem.classList.add('answers-item');
-                elem.classList.add('d-flex');
-                elem.classList.add(row.class);
-                elem.innerHTML = `
-                    <input type="${type}" id="${row.id}" name="answer" class="d-none">
-                    <label for="${row.id}" class="d-flex flex-column justify-content-between">
-                        <img class="answerImg" src="${row.img}" alt="burger">
-                        <span>${row.text}</span>
-                    </label>
-                `;
-                elems.modal.answers.appendChild(elem);
-            });
+    const render = (id) => {
+        if (id === idx) {
+            return;
         }
-        renderQuestions();
-    }
+        idx = id;
+
+        let q = questions[idx];
+        console.log('q: ', q);
+        elems.modal.question.textContent = q.question;
+
+        elems.modal.answers.innerHTML = '';
+        q.answers.forEach(row => {
+            const elem = document.createElement('div');
+            elem.classList.add('answers-item');
+            elem.classList.add('d-flex');
+            elem.classList.add(row.class);
+            elem.innerHTML = `
+                <input type="${q.type}" id="${row.title}" name="answer" class="d-none" />
+                <label for="${row.title}" class="d-flex flex-column justify-content-between">
+                    <img class="answerImg" src="${row.url}" alt="burger">
+                    <span>${row.title}</span>
+                </label>
+            `;
+            elems.modal.answers.appendChild(elem);
+        });
+    };
 
     function applySelector(obj) {
         function applyFunction(obj, fun, context) {
@@ -89,6 +107,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         return applyFunction(obj, document.querySelector, document);
+    }
+
+    async function getData(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Can\'t read data from ${url}. Status code: ${response.status}`);
+        }
+        return await response.json();
     }
 
     init();
