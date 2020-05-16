@@ -75,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
         idx = id;
 
         let q = questions[idx];
-        console.log('q: ', q);
         elems.modal.question.textContent = q.question;
 
         elems.modal.answers.innerHTML = '';
@@ -93,6 +92,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             elems.modal.answers.appendChild(elem);
         });
+
+        elems.modal.button.previous.disabled = idx <= 0;
+        elems.modal.button.next.disabled = idx >= questions.length - 1;
     };
 
     function applySelector(obj) {
