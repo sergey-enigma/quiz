@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let questions = [];
     let idx;
 
+    // All HTML elements from index.html file for manipulation
     let elems = {
         button: {
             openModal: '#btnOpenModal',
@@ -18,8 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     };
-    elems = applySelector(elems);
+    elems = applySelector(elems); // transform string CSS selectors to HTML elements
 
+    // All handlers, which will be used in program
     const handle = {
         window: {
             width: () => {
@@ -54,7 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Main procedure
     function init() {
+        // Attach handlers to DOM elements
         window.addEventListener('resize', handle.window.width);
         elems.button.menu.addEventListener('click', handle.dialog.show);
         elems.button.openModal.addEventListener('click', handle.dialog.show);
@@ -63,20 +67,25 @@ document.addEventListener('DOMContentLoaded', function() {
         elems.modal.button.next.addEventListener('click', handle.dialog.next);
         elems.modal.id.addEventListener('click', handle.dialog.outside);
 
+        // run one time window width calculation handler
         handle.window.width();
 
+        // Asynchronous data reading from external file (load result in questions variable)
         getData('questions.json').then((result) => questions = result.questions);
     }
 
+    // Render dialog quiz window
     const render = (id) => {
         if (id === idx) {
-            return;
+            return; // Skip rendering, if dialog page wasn't changed
         }
         idx = id;
 
         let q = questions[idx];
+        // Poplate question in dialog
         elems.modal.question.textContent = q.question;
 
+        // Populate answers in dialog
         elems.modal.answers.innerHTML = '';
         q.answers.forEach(row => {
             const elem = document.createElement('div');
@@ -93,10 +102,12 @@ document.addEventListener('DOMContentLoaded', function() {
             elems.modal.answers.appendChild(elem);
         });
 
+        // Enable / Disable Prev / Next buttons. Depends on current page (idx)
         elems.modal.button.previous.disabled = idx <= 0;
         elems.modal.button.next.disabled = idx >= questions.length - 1;
     };
 
+    // Transform CSS selectors to DOM elements
     function applySelector(obj) {
         function applyFunction(obj, fun, context) {
             let res = {};
@@ -111,6 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return applyFunction(obj, document.querySelector, document);
     }
 
+    // Reading data from file by url path
     async function getData(url) {
         const response = await fetch(url);
         if (!response.ok) {
