@@ -42,10 +42,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 elems.modal.id.classList.add('d-block');
             },
             hide: () => {
+                saveResult();
                 elems.button.menu.classList.remove('active');
                 elems.modal.id.classList.remove('d-block');
             },
             previous: () => {
+                saveResult();
                 let id = Math.max(idx - 1, 0);
                 render(id);
             },
@@ -56,10 +58,16 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             send: () => {
                 saveResult();
-                console.log(result);
+                renderResult();
+                setTimeout(() => {
+                    elems.button.menu.classList.remove('active');
+                    elems.modal.id.classList.remove('d-block');
+                    result = [];
+                }, 5000);
             },
             outside: (event) => {
                 if (event.target === elems.modal.id) {
+                    saveResult();
                     handle.dialog.hide();
                 }
             }
@@ -94,6 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
             question: idx < questions.length ? questions[idx].question : 'User Info',
             answer: answer
         };
+    };
+
+    const renderResult = () => {
+        elems.modal.form.question.textContent = 'Спасибо за ваш заказ!';
+        elems.modal.form.answers.innerHTML = JSON.stringify(result);
     };
 
     // Render dialog quiz window
@@ -145,8 +158,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (result[idx]) {
-                result[idx].answer.forEach(id => {
-                    document.getElementById(id).checked = true;
+                result[idx].answer.forEach(value => {
+                    document.getElementById(value).checked = true;
                 })
             }
         }
@@ -159,6 +172,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input id="phone" type="phone" class="form-control" />
                 </div>
             `;
+            if (result[idx]) {
+                result[idx].answer.forEach(value => {
+                    document.getElementById('phone').value = value;
+                })
+            }
         }
     };
 
