@@ -58,7 +58,8 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             send: () => {
                 saveResult();
-                renderResult();
+                saveAnswerToFirebase(result);
+                render(idx + 1);
                 setTimeout(() => {
                     elems.button.menu.classList.remove('active');
                     elems.modal.id.classList.remove('d-block');
@@ -90,7 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
         handle.window.width();
 
         // Asynchronous data reading from external file (load result in questions variable)
-        getData('questions.json').then((result) => questions = result.questions);
+        //getData('questions.json').then((result) => questions = result.questions);
+
+        initFirebase();
+        loadFirebaseData().then(snap => questions = snap.val());
     }
 
     const saveResult = () => {
@@ -104,11 +108,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     };
 
-    const renderResult = () => {
-        elems.modal.form.question.textContent = 'Спасибо за ваш заказ!';
-        elems.modal.form.answers.innerHTML = JSON.stringify(result);
-    };
-
     // Render dialog quiz window
     const render = (id) => {
         if (id === idx) {
@@ -118,8 +117,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (idx < questions.length) {
             renderQuestion();
-        } else {
+        } else if (idx === questions.length) {
             renderClientInfo();
+        } else {
+            renderResult();
         }
 
         // Enable / Disable Prev / Next buttons. Depends on current page (idx)
@@ -132,6 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
             case idx === questions.length:
                 elems.modal.button.next.classList.add('d-none');
                 elems.modal.button.send.classList.remove('d-none');
+                break;
+            default:
+                elems.modal.button.previous.classList.add('d-none');
+                elems.modal.button.next.classList.add('d-none');
+                elems.modal.button.send.classList.add('d-none');
                 break;
         }
 
@@ -172,12 +178,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input id="phone" type="phone" class="form-control" />
                 </div>
             `;
+            const phone = document.getElementById('phone');
+            phone.addEventListener('input', (event) => {
+                event.target.value = event.target.value.replace(/[^0-9+-]/, '');
+            });
             if (result[idx]) {
                 result[idx].answer.forEach(value => {
-                    document.getElementById('phone').value = value;
+                    phone.value = value;
                 })
             }
         }
+    };
+
+    const renderResult = () => {
+        elems.modal.form.question.textContent = 'Спасибо за ваш заказ!';
+        elems.modal.form.answers.innerHTML = '';
     };
 
     // Transform CSS selectors to DOM elements
@@ -202,6 +217,27 @@ document.addEventListener('DOMContentLoaded', function() {
             throw new Error(`Can\'t read data from ${url}. Status code: ${response.status}`);
         }
         return await response.json();
+    }
+
+    function initFirebase() {
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWT_f_Qqtx4VU-aQh9RfIyJYWP2pYP_4M",
+            authDomain: "burgers-quiz.firebaseapp.com",
+            databaseURL: "https://burgers-quiz.firebaseio.com",
+            projectId: "burgers-quiz",
+            storageBucket: "burgers-quiz.appspot.com",
+            messagingSenderId: "118992367328",
+            appId: "1:118992367328:web:69848ee4acaf6f9be82a85"
+        };
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    function loadFirebaseData() {
+        return firebase.database().ref().child('questions').once('value');
+    }
+
+    function saveAnswerToFirebase(order) {
+        firebase.database().ref().child('orders').push(order);
     }
 
     init();
